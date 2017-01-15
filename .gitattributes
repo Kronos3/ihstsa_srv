@@ -1,0 +1,4 @@
+*.h linguist-language=C
+*.c linguist-language=C
+
+/include/mongoose.h linguist-vendored
