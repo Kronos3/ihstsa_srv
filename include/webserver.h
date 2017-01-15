@@ -50,6 +50,14 @@ struct WebServer {
     struct ssl * _ssl;
 };
 
-int read_config (struct WebServer**, char* filename); // Return the number of servers
-void startServer (struct WebServer*, void (*handler) (struct mg_connection *nc, int ev, void *p)); // Fork this function to run multiple servers
+struct Website {
+    struct WebServer ** srvs;
+    int c; // Count of servers
+}
 
+extern Website * MAIN;
+
+int read_config (struct Website*, char* filename); // Return the number of servers
+void startServer (struct WebServer*, void (*handler) (struct mg_connection *nc, int ev, void *p)); // Fork this function to run multiple servers
+void ev_handle (struct mg_connection *nc, int ev, void *p);
+void ev_handle_root (struct mg_connection *nc, int ev, void *p, char* root);
