@@ -33,6 +33,7 @@ class Server:
     ssl = False
     redirect = False
     forcewww = False
+    ip = None
     
     def __init__ (self):
         pass
@@ -46,7 +47,9 @@ class Config(configparser.ConfigParser):
             server.log = self[s_server]["log"]
             server.root = self[s_server]["root"]
             exec ("server.subdomains = %s" % self[s_server]["subdomains"])
-            server.port = int(s_server)
+            s_ip = s_server.split (":")
+            server.ip = s_ip[0]
+            server.port = int(s_ip[1])
             exec ("server.ssl = %s" % self[s_server]["ssl"])
             server.redirect = self[s_server]["redirect"]
             server.forcewww = self[s_server]["forcewww"]
