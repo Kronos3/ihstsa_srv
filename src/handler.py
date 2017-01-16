@@ -81,12 +81,12 @@ class WebHandler(socketserver.BaseRequestHandler):
         
         if self.server.config.forcewww and not pdomain.has_subdomain:
             if (self.server.has_ssl):
-                return ("%s %s Moved Permanently\nLocation: https://www.%s/\n" % (parsed["version"], HTTPRes.REDIRPERM, parsed["Host"])).encode() # Send to https
+                return ("%s %s Moved Permanently\nLocation: https://www.%s/\n\n" % (parsed["version"], HTTPRes.REDIRPERM, parsed["Host"])).encode() # Send to https
             else:
-                return ("%s %s Moved Permanently\nLocation: http://www.%s/\n" % (parsed["version"], HTTPRes.REDIRPERM, parsed["Host"])).encode() # Send to http
+                return ("%s %s Moved Permanently\nLocation: http://www.%s/\n\n" % (parsed["version"], HTTPRes.REDIRPERM, parsed["Host"])).encode() # Send to http
         
         if self.server.config.redirect != "False":
-            return ("%s %s Moved Permanently\nLocation: %s\n" % (parsed["version"], HTTPRes.REDIRPERM, self.server.config.redirect)).encode()
+            return ("%s %s Moved Permanently\nLocation: %s\n\n" % (parsed["version"], HTTPRes.REDIRPERM, self.server.config.redirect)).encode()
         
         if parsed["path"] == "/":
             parsed["path"] = "/index.html"
@@ -134,7 +134,7 @@ class WebHandler(socketserver.BaseRequestHandler):
             res = ("%s %s INTERNAL ERROR\n" % ("HTTP/1.1", HTTPRes.INTERN)).encode()
         try:
             if res != ("%s %s Bad Request\n" % ("HTTP/1.1", HTTPRes.BADREQ)).encode():
-                self.server.log (res[0:str(res, 'utf-8').find("\n\n")], "RESPONSE")
+                self.server.log (res[0:res.find("\n\n")], "RESPONSE")
         except UnicodeDecodeError:
             self.server.log ("Cant decode response (but it was sent, image most likely)", "RESPONSE")
         self.request.sendall(res)
