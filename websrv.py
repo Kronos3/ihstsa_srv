@@ -27,7 +27,7 @@ from src import server
 
 def main(args):
     global s
-    s = server.WebSite ("websrv.cfg")
+    s = server.WebSite (args[1])
     s.start()
     return 0
 
