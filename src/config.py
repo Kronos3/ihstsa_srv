@@ -47,6 +47,7 @@ class Config(configparser.ConfigParser):
             exec ("server.subdomains = %s" % self[s_server]["subdomains"])
             server.port = int(s_server)
             exec ("server.ssl = %s" % self[s_server]["ssl"])
+            print (server.ssl)
             server.redirect = self[s_server]["redirect"]
             server.forcewww = self[s_server]["forcewww"]
             yield server

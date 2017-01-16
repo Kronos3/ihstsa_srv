@@ -86,7 +86,6 @@ class WebHandler(socketserver.BaseRequestHandler):
         ret = {}
         req_pars = lines[0].split (" ")
         if len (req_pars) != 3:
-            self.server.log (request)
             return
         self.server.log (lines[0], "REQUEST")
         ret["method"] = req_pars[0]
@@ -112,7 +111,8 @@ class WebHandler(socketserver.BaseRequestHandler):
             traceback.print_exc(file=sys.stdout)
             res = ("%s %s INTERNAL ERROR\n" % ("HTTP/1.1", HTTPRes.INTERN)).encode()
         try:
-            self.server.log (res[0:str(res, 'utf-8').find("\n\n")], "RESPONSE")
+            if res != ("%s %s Bad Request\n" % ("HTTP/1.1", HTTPRes.BADREQ)).encode():
+                self.server.log (res[0:str(res, 'utf-8').find("\n\n")], "RESPONSE")
         except UnicodeDecodeError:
-            self.server.log ("Cant decode response (but it was send, image most likely)", "RESPONSE")
+            self.server.log ("Cant decode response (but it was sent, image most likely)", "RESPONSE")
         self.request.sendall(res)

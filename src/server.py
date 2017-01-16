@@ -27,7 +27,7 @@ import socketserver
 from . import handler
 from . import config as cfg
 from time import gmtime, strftime
-import os, sys
+import os, sys, socket, ssl
 
 class WebSite:
     def __init__ (self, fp):
@@ -37,7 +37,10 @@ class WebSite:
         self.config.read (fp)
         self.servers = {}
         for x in self.config.parse_server ():
-            self.servers[x.port] = WebServer (("localhost", x.port), handler.WebHandler)
+            if x.ssl != False:
+                self.servers[x.port] = WebServerSSL (("localhost", x.port), handler.WebHandler, x.ssl)
+            else:
+                self.servers[x.port] = WebServer (("localhost", x.port), handler.WebHandler)
             self.servers[x.port].configure (x)
             self.servers[x.port].log ("Will bind localhost to port %s" % x.port, "INFO")
     
@@ -55,9 +58,33 @@ class WebSite:
 class WebServer (socketserver.TCPServer):
     def configure (self, cfg):
         self.config = cfg
+        if self.config.ssl:
+            self.certfile = self.config.ssl["cert"]
+            self.keyfile = self.config.ssl["key"]
     
     def log (self, message, _type="INFO"):
         msg = "[%s] %s\t%s" % (strftime("%Y-%m-%d %H:%M:%S", gmtime()), _type, message)
         print (msg)
         sys.stdout.flush()
         os.system ("echo '%s' >> %s" % (msg, self.config.log))
+
+class WebServerSSL (WebServer):
+    
+    def __init__ (self, 
+                    server_address, 
+                    RequestHandlerClass,
+                    _ssl,
+                    bind_and_activate=True):
+        socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate=True)
+        _socket = socket.socket(self.address_family,
+                               self.socket_type)
+
+        self.socket = ssl.wrap_socket (_socket, certfile=_ssl["cert"], keyfile=_ssl["key"], server_side=True)
+        
+        if bind_and_activate:
+            try:
+                self.server_bind()
+                self.server_activate()
+            except:
+                self.server_close()
+                raise
