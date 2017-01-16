@@ -38,9 +38,9 @@ class WebSite:
         self.servers = {}
         for x in self.config.parse_server ():
             if x.ssl != False:
-                self.servers[x.port] = WebServerSSL (("localhost", x.port), handler.WebHandler, x.ssl)
+                self.servers[x.port] = WebServerSSL ((socket.gethostbyname("localhost"), x.port), handler.WebHandler, x.ssl)
             else:
-                self.servers[x.port] = WebServer (("localhost", x.port), handler.WebHandler)
+                self.servers[x.port] = WebServer ((socket.gethostbyname("localhost"), x.port), handler.WebHandler)
             self.servers[x.port].configure (x)
             self.servers[x.port].log ("Will bind localhost to port %s" % x.port, "INFO")
     
