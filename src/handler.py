@@ -51,7 +51,7 @@ class domain:
         if l == 3:
             self.has_subdomain = True
             self.subdomain = splt[0]
-            self.domain = '.'.join (splt[1], splt[2])
+            self.domain = '.'.join ((splt[1], splt[2]))
 
 class WebHandler(socketserver.BaseRequestHandler):
     def __init__ (self, request, client_address, server):
