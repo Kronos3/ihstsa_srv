@@ -27,6 +27,32 @@ import mimetypes
 import os, traceback, sys
 from .res import HTTPRes
 
+class domain:
+    has_subdomain = False
+    subdomain = ""
+    domain = ""
+    is_local = False
+    
+    def __init__ (self, host):
+        
+        splt = host.split (".")
+        l = len(splt)
+        if "localhost" in host:
+            self.is_local = True
+            self.domain = "localhost"
+        if l == 1 and self.is_local:
+            self.has_subdomain = False # Dont redirect to www for localally hosted servers
+        if l == 2 and not self.is_local:
+            self.has_subdomain = False
+            self.domain = host
+        if l == 2 and self.is_local:
+            self.subdomain = splt[0]
+            self.has_subdomain = True
+        if l == 3:
+            self.has_subdomain = True
+            self.subdomain = splt[0]
+            self.domain = '.'.join (splt[1], splt[2])
+
 class WebHandler(socketserver.BaseRequestHandler):
     def __init__ (self, request, client_address, server):
         self.request = request
@@ -38,33 +64,29 @@ class WebHandler(socketserver.BaseRequestHandler):
         finally:
             self.finish()
     
-    def parse_host (self, host):
-        splt = host.split (".")
-        
-        if len(splt) == 1:
-            if host == "localhost":
-                return "www"
-        elif len(splt) == 2:
-            if host == self.server.config.domain:
-                return "www"
-            else:
-                return splt[0]
-        else:
-            return splt[0]
-    
     def gen_response (self, parsed):
         if (parsed["method"] != "GET"):
             return str("%s %s NOT IMPLEMENTED\n" % (parsed["version"], HTTPRes.IMPLEMENTED)).encode()
         if not mimetypes.inited:
             mimetypes.init()
         
+        pdomain = domain(parsed["Host"])
         subroot = ""
         try:
-            self.server.config.subdomains[self.parse_host(parsed["Host"])]
+            self.server.config.subdomains[pdomain.subdomain]
         except KeyError:
             subroot = self.server.config.root
         else:
-            subroot = self.server.config.subdomains[self.parse_host(parsed["Host"])]
+            subroot = self.server.config.subdomains[pdomain.subdomain]
+        
+        if self.server.config.forcewww and not pdomain.has_subdomain:
+            if (self.server.has_ssl):
+                return ("%s %s Moved Permanently\nLocation: https://www.%s/\n" % (parsed["version"], HTTPRes.REDIRPERM, parsed["Host"])).encode() # Send to https
+            else:
+                return ("%s %s Moved Permanently\nLocation: http://www.%s/\n" % (parsed["version"], HTTPRes.REDIRPERM, parsed["Host"])).encode() # Send to http
+        
+        if self.server.config.redirect != "False":
+            return ("%s %s Moved Permanently\nLocation: %s\n" % (parsed["version"], HTTPRes.REDIRPERM, self.server.config.redirect)).encode()
         
         if parsed["path"] == "/":
             parsed["path"] = "/index.html"

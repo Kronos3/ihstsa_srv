@@ -56,6 +56,13 @@ class WebSite:
             self.servers[port].server_close()
 
 class WebServer (socketserver.TCPServer):
+    def __init__ (self, 
+                  server_address, 
+                  RequestHandlerClass,
+                  bind_and_activate=True):
+        self.has_ssl = False
+        socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate=True)
+    
     def configure (self, cfg):
         self.config = cfg
         if self.config.ssl:
@@ -71,13 +78,14 @@ class WebServer (socketserver.TCPServer):
 class WebServerSSL (WebServer):
     
     def __init__ (self, 
-                    server_address, 
-                    RequestHandlerClass,
-                    _ssl,
-                    bind_and_activate=True):
+                  server_address, 
+                  RequestHandlerClass,
+                  _ssl,
+                  bind_and_activate=True):
+        self.has_ssl = True
         socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate=True)
         _socket = socket.socket(self.address_family,
-                               self.socket_type)
+                                self.socket_type)
 
         self.socket = ssl.wrap_socket (_socket, certfile=_ssl["cert"], keyfile=_ssl["key"], server_side=True)
         
