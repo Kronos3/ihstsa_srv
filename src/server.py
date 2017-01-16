@@ -26,7 +26,7 @@
 import socketserver
 from . import handler
 from . import config as cfg
-from time import gmtime, strftime
+import time
 import os, sys, socket, ssl
 
 class WebSite:
@@ -70,7 +70,7 @@ class WebServer (socketserver.TCPServer):
             self.keyfile = self.config.ssl["key"]
     
     def log (self, message, _type="INFO"):
-        msg = "[%s] %s\t%s" % (strftime("%Y-%m-%d %H:%M:%S", gmtime()), _type, message)
+        msg = "[%s] %s\t%s" % (time.asctime( time.localtime(time.time()) ), gmtime()), _type, message)
         print (msg)
         sys.stdout.flush()
         # Clean the logs
