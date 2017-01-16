@@ -70,7 +70,7 @@ class WebServer (socketserver.TCPServer):
             self.keyfile = self.config.ssl["key"]
     
     def log (self, message, _type="INFO"):
-        msg = "[%s] %s\t%s" % (time.asctime( time.localtime(time.time()) ), gmtime()), _type, message)
+        msg = "[%s] %s\t%s" % (time.asctime( time.localtime(time.time()) ), _type, message)
         print (msg)
         sys.stdout.flush()
         # Clean the logs
