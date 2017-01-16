@@ -66,7 +66,7 @@ class WebHandler(socketserver.BaseRequestHandler):
     
     def gen_response (self, parsed):
         if (parsed["method"] != "GET"):
-            return str("%s %s NOT IMPLEMENTED\n" % (parsed["version"], HTTPRes.IMPLEMENTED)).encode()
+            return (("%s %s NOT IMPLEMENTED\n" % (parsed["version"], HTTPRes.IMPLEMENTED)).encode(), HTTPRes.IMPLEMENTED)
         if not mimetypes.inited:
             mimetypes.init()
         
@@ -81,12 +81,12 @@ class WebHandler(socketserver.BaseRequestHandler):
         
         if self.server.config.forcewww and not pdomain.has_subdomain:
             if (self.server.has_ssl):
-                return ("%s %s Moved Permanently\nLocation: https://www.%s/\n\n" % (parsed["version"], HTTPRes.REDIRPERM, parsed["Host"])).encode() # Send to https
+                return (("%s %s Moved Permanently\nLocation: https://www.%s/\n\n" % (parsed["version"], HTTPRes.REDIRPERM, parsed["Host"])).encode(), HTTPRes.REDIRPERM) # Send to https
             else:
-                return ("%s %s Moved Permanently\nLocation: http://www.%s/\n\n" % (parsed["version"], HTTPRes.REDIRPERM, parsed["Host"])).encode() # Send to http
+                return (("%s %s Moved Permanently\nLocation: http://www.%s/\n\n" % (parsed["version"], HTTPRes.REDIRPERM, parsed["Host"])).encode(), HTTPRes.REDIRPERM) # Send to http
         
         if self.server.config.redirect != "False":
-            return ("%s %s Moved Permanently\nLocation: %s\n\n" % (parsed["version"], HTTPRes.REDIRPERM, self.server.config.redirect)).encode()
+            return (("%s %s Moved Permanently\nLocation: %s\n\n" % (parsed["version"], HTTPRes.REDIRPERM, self.server.config.redirect)).encode(), HTTPRes.REDIRPERM)
         
         if parsed["path"] == "/":
             parsed["path"] = "/index.html"
@@ -94,14 +94,14 @@ class WebHandler(socketserver.BaseRequestHandler):
         fp = "%s%s" % (subroot, parsed["path"])
         if not os.path.isfile(fp):
             self.server.log ("%s: no such file or directory" % fp)
-            return str("%s %s NOT FOUND\n" % (parsed["version"], HTTPRes.NOTFOUND)).encode()
+            return (("%s %s NOT FOUND\n" % (parsed["version"], HTTPRes.NOTFOUND)).encode(), HTTPRes.NOTFOUND)
         mtype = mimetypes.guess_type (fp)[0]
         if not mtype:
             mtype = "text/plain"
         read = open(fp, "rb").read()
-        template = str("%s 200 OK\nContent-Type: %s\n\n" % (parsed["version"], mtype)).encode()
+        template = ("%s %s OK\nContent-Type: %s\n\n" % (parsed["version"], HTTPRes.OK, mtype)).encode()
         template += read
-        return template
+        return template, HTTPRes.OK
     
     def parse_http (self, request):
         lines = str(request)[2:-1].split ("\\r\\n")
@@ -123,18 +123,21 @@ class WebHandler(socketserver.BaseRequestHandler):
     
     def handle(self):
         self.data = self.request.recv(1024).strip()
+        status = 0
         try:
             parsed = self.parse_http(self.data)
             if (parsed == None):
                 res = ("%s %s Bad Request\n" % ("HTTP/1.1", HTTPRes.BADREQ)).encode()
+                status = HTTPRes.BADREQ
             else:
-                res = self.gen_response (parsed)
+                res, status = self.gen_response (parsed)
         except:
             traceback.print_exc(file=sys.stdout)
             res = ("%s %s INTERNAL ERROR\n" % ("HTTP/1.1", HTTPRes.INTERN)).encode()
+            status = HTTPRes.INTERN
         try:
             if res != ("%s %s Bad Request\n" % ("HTTP/1.1", HTTPRes.BADREQ)).encode():
-                self.server.log (res[0:str(res).find("\n\n")], "RESPONSE")
+                self.server.log (status, "RESPONSE")
         except UnicodeDecodeError:
             self.server.log ("Cant decode response (but it was sent, image most likely)", "RESPONSE")
         self.request.sendall(res)
