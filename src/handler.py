@@ -134,7 +134,7 @@ class WebHandler(socketserver.BaseRequestHandler):
             res = ("%s %s INTERNAL ERROR\n" % ("HTTP/1.1", HTTPRes.INTERN)).encode()
         try:
             if res != ("%s %s Bad Request\n" % ("HTTP/1.1", HTTPRes.BADREQ)).encode():
-                self.server.log (res[0:res.find("\n\n")], "RESPONSE")
+                self.server.log (res[0:str(res).find("\n\n")], "RESPONSE")
         except UnicodeDecodeError:
             self.server.log ("Cant decode response (but it was sent, image most likely)", "RESPONSE")
         self.request.sendall(res)
