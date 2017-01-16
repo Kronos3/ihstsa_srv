@@ -73,6 +73,8 @@ class WebServer (socketserver.TCPServer):
         msg = "[%s] %s\t%s" % (strftime("%Y-%m-%d %H:%M:%S", gmtime()), _type, message)
         print (msg)
         sys.stdout.flush()
+        # Clean the logs
+        os.system ("truncate %s --size 0" % self.config.log)
         os.system ("echo '%s' >> %s" % (msg, self.config.log))
 
 class WebServerSSL (WebServer):
