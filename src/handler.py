@@ -111,7 +111,10 @@ class WebHandler(socketserver.BaseRequestHandler):
             return
         self.server.log (lines[0], "REQUEST")
         ret["method"] = req_pars[0]
-        ret["path"] = req_pars[1]
+        if (req_pars[1].find("?") != -1):
+            ret["path"] = req_pars[1][:req_pars[1].find("?")]
+        else:
+            ret["path"] = req_pars[1]
         ret["version"] = req_pars[2]
         for line in lines[1:]: 
             parsed = line.split (": ")
