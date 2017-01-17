@@ -62,7 +62,16 @@ class WebServer (socketserver.TCPServer):
                   RequestHandlerClass,
                   bind_and_activate=True):
         self.has_ssl = False
-        socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate=True)
+        socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate=False)
+        self.socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        if bind_and_activate:
+            try:
+                self.server_bind()
+                self.server_activate()
+            except:
+                self.server_close()
+                raise
+
     
     def configure (self, cfg):
         self.config = cfg
@@ -87,11 +96,12 @@ class WebServerSSL (WebServer):
                   _ssl,
                   bind_and_activate=True):
         self.has_ssl = True
-        socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate=True)
+        socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate=False)
         _socket = socket.socket(self.address_family,
                                 self.socket_type)
-
+        
         self.socket = ssl.wrap_socket (_socket, certfile=_ssl["cert"], keyfile=_ssl["key"], server_side=True)
+        self.socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         
         if bind_and_activate:
             try:
