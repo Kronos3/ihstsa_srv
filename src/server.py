@@ -66,7 +66,8 @@ class WebServer (socketserver.TCPServer):
     
     def configure (self, cfg):
         self.config = cfg
-        self.logfile = open ( self.config.log, "w+" ) # Truncate the file to speed the opening of the file
+        self.logfile = open ( self.config.log, "a+" ) # Truncate the file to speed the opening of the file
+        self.logfile.truncate(0)
         if self.config.ssl:
             self.certfile = self.config.ssl["cert"]
             self.keyfile = self.config.ssl["key"]
