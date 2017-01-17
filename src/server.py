@@ -53,6 +53,7 @@ class WebSite:
     def end (self):
         for port in self.servers:
             self.servers[port].log ("stopping (%s)" % port, "EXIT")
+            self.server[port].logfile.close()
             self.servers[port].server_close()
 
 class WebServer (socketserver.TCPServer):
@@ -65,6 +66,7 @@ class WebServer (socketserver.TCPServer):
     
     def configure (self, cfg):
         self.config = cfg
+        self.logfile = open ( self.config.log, "w+" ) # Truncate the file to speed the opening of the file
         if self.config.ssl:
             self.certfile = self.config.ssl["cert"]
             self.keyfile = self.config.ssl["key"]
@@ -73,9 +75,8 @@ class WebServer (socketserver.TCPServer):
         msg = "[%s] %s\t%s" % (time.asctime( time.localtime(time.time()) ), _type, message)
         print (msg)
         sys.stdout.flush()
-        # Clean the logs
-        os.system ("truncate %s --size 0" % self.config.log)
-        os.system ("echo '%s' >> %s" % (msg, self.config.log))
+        self.logfile.write (msg)
+        self.logfile.flush()
 
 class WebServerSSL (WebServer):
     
