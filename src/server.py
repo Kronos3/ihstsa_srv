@@ -63,7 +63,7 @@ class WebServer (socketserver.TCPServer):
                   bind_and_activate=True):
         self.has_ssl = False
         socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate=False)
-        self.socket.setsockopt(ssl.SOL_SOCKET, ssl.SO_REUSEADDR, 1)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         if bind_and_activate:
             try:
                 self.server_bind()
@@ -101,7 +101,7 @@ class WebServerSSL (WebServer):
                                 self.socket_type)
         
         self.socket = ssl.wrap_socket (_socket, certfile=_ssl["cert"], keyfile=_ssl["key"], server_side=True)
-        self.socket.setsockopt(ssl.SOL_SOCKET, ssl.SO_REUSEADDR, 1)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         
         if bind_and_activate:
             try:
