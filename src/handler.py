@@ -70,7 +70,10 @@ class WebHandler(socketserver.BaseRequestHandler):
         if not mimetypes.inited:
             mimetypes.init()
         
-        pdomain = domain(parsed["Host"])
+        try:
+          pdomain   = domain(parsed["Host"])
+        except:
+          pdomain = domain(self.server.config.domain)
         subroot = ""
         try:
             self.server.config.subdomains[pdomain.subdomain]
