@@ -53,6 +53,7 @@ class WebSite:
     def end (self):
         for port in self.servers:
             self.servers[port].log ("stopping (%s)" % port, "EXIT")
+            self.server[port].logfile.close()
             self.servers[port].server_close()
 
 class WebServer (socketserver.TCPServer):
@@ -61,21 +62,31 @@ class WebServer (socketserver.TCPServer):
                   RequestHandlerClass,
                   bind_and_activate=True):
         self.has_ssl = False
-        socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate=True)
+        socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate=False)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        if bind_and_activate:
+            try:
+                self.server_bind()
+                self.server_activate()
+            except:
+                self.server_close()
+                raise
+
     
     def configure (self, cfg):
         self.config = cfg
+        self.logfile = open ( self.config.log, "a+" ) # Truncate the file to speed the opening of the file
+        self.logfile.truncate(0)
         if self.config.ssl:
             self.certfile = self.config.ssl["cert"]
             self.keyfile = self.config.ssl["key"]
     
     def log (self, message, _type="INFO"):
-        msg = "[%s] %s\t%s" % (time.asctime( time.localtime(time.time()) ), _type, message)
+        msg = "[%s] %s\t%s\n" % (time.asctime( time.localtime(time.time()) ), _type, message)
         print (msg)
         sys.stdout.flush()
-        # Clean the logs
-        os.system ("truncate %s --size 0" % self.config.log)
-        os.system ("echo '%s' >> %s" % (msg, self.config.log))
+        self.logfile.write (msg)
+        self.logfile.flush()
 
 class WebServerSSL (WebServer):
     
@@ -85,11 +96,12 @@ class WebServerSSL (WebServer):
                   _ssl,
                   bind_and_activate=True):
         self.has_ssl = True
-        socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate=True)
+        socketserver.TCPServer.__init__(self, server_address, RequestHandlerClass, bind_and_activate=False)
         _socket = socket.socket(self.address_family,
                                 self.socket_type)
-
+        
         self.socket = ssl.wrap_socket (_socket, certfile=_ssl["cert"], keyfile=_ssl["key"], server_side=True)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         
         if bind_and_activate:
             try:
