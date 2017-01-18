@@ -63,10 +63,25 @@ class WebHandler(socketserver.BaseRequestHandler):
             self.handle()
         finally:
             self.finish()
-    
+
+     def _gen_headers(self, code, version="HTTP/1.1", extra="", mime="text/plain"):
+        """ Generates HTTP response Headers. Ommits the first line! """
+
+        # determine response code
+        h = ''
+        h = "%s %s %s\n" % (version, code[0], code[1])
+        h += extra
+        # write further headers
+        h += "Content-Type: %s\n" % mime
+        current_date = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+        h += 'Date: ' + current_date +'\n'
+        h += 'Server: IHSTSA capter webserver\n'
+        h += 'Connection: close\n\n'  # signal that the conection wil be closed after complting the request
+
+        return h.encode()
     def gen_response (self, parsed):
         if (parsed["method"] != "GET"):
-            return (("%s %s NOT IMPLEMENTED\n" % (parsed["version"], HTTPRes.IMPLEMENTED)).encode(), HTTPRes.IMPLEMENTED)
+            return self._gen_headers (HTTPRes.IMPLEMENTED, parsed["version"])
         if not mimetypes.inited:
             mimetypes.init()
         
@@ -84,12 +99,12 @@ class WebHandler(socketserver.BaseRequestHandler):
         
         if self.server.config.forcewww and not pdomain.has_subdomain:
             if (self.server.has_ssl):
-                return (("%s %s Moved Permanently\nLocation: https://www.%s/\n\n" % (parsed["version"], HTTPRes.REDIRPERM, parsed["Host"])).encode(), HTTPRes.REDIRPERM) # Send to https
+                return self._gen_headers (HTTPRes.REDIRPERM, parsed["version"], extra="Location: https://www.%s/\n" % parsed["Host"])
             else:
-                return (("%s %s Moved Permanently\nLocation: http://www.%s/\n\n" % (parsed["version"], HTTPRes.REDIRPERM, parsed["Host"])).encode(), HTTPRes.REDIRPERM) # Send to http
+                return self._gen_headers (HTTPRes.REDIRPERM, parsed["version"], extra="Location: http://www.%s/\n" % parsed["Host"])
         
         if self.server.config.redirect != "False":
-            return (("%s %s Moved Permanently\nLocation: %s\n\n" % (parsed["version"], HTTPRes.REDIRPERM, self.server.config.redirect)).encode(), HTTPRes.REDIRPERM)
+            return self._gen_headers (HTTPRes.REDIRPERM, parsed["version"], extra="Location: %s\n" % self.server.config.redirect)
         
         if parsed["path"] == "/":
             parsed["path"] = "/index.html"
@@ -97,12 +112,12 @@ class WebHandler(socketserver.BaseRequestHandler):
         fp = "%s%s" % (subroot, parsed["path"])
         if not os.path.isfile(fp):
             self.server.log ("%s: no such file or directory" % fp)
-            return (("%s %s NOT FOUND\n" % (parsed["version"], HTTPRes.NOTFOUND)).encode(), HTTPRes.NOTFOUND)
+            return self._gen_headers (HTTPRes.NOTFOUND, parsed["version"])
         mtype = mimetypes.guess_type (fp)[0]
         if not mtype:
             mtype = "text/plain"
         read = open(fp, "rb").read()
-        template = ("%s %s OK\nContent-Type: %s\n\n" % (parsed["version"], HTTPRes.OK, mtype)).encode()
+        template = self._gen_headers (HTTPRes.OK, version=parsed["version"], mime=mtype)
         template += read
         return template, HTTPRes.OK
     

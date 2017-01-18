@@ -25,23 +25,23 @@
 
 class HTTPRes:
     # 200 class (success)
-    OK = 200
+    OK = (200, 'OK')
     
     # 300 class (redirection)
-    REDIRPERM = 301 # Perminant redirect
-    PROXY = 305 # Proxy required
+    REDIRPERM = (301, "Moved Perminantly") # Perminant redirect
+    PROXY = (305, "Proxy Required") # Proxy required
     
     # 400 class (client errors)
-    BADREQ = 400 # Bad request
-    UNAUTH = 401 # Unauthorized
-    FORBIDDEN = 403 # Forbidden (file permissions
-    NOTFOUND = 404 # No such file or directory
+    BADREQ = (400, "Bad Request") # Bad request
+    UNAUTH = (401, "Unauthorized") # Unauthorized
+    FORBIDDEN = (403, "Forbidden") # Forbidden (file permissions)
+    NOTFOUND = (404, "Not Found") # No such file or directory
     
     # 500 class (server errors)
-    INTERN = 500 # Server error (caused by exceptions
-    IMPLEMENTED = 501 # method not found
-    BADGATE = 502 # Invalid response from another server
-    UNAVAILIABLE = 503 # Method found but not working
-    TIMEOUT = 504 # No response from another server
-    HTTPVER = 505 # HTTP Version not 1.0 or 1.1
-    NETAUTH = 511 # Need auth before continuing
+    INTERN = (500, "Internal error") # Server error (caused by exceptions)
+    IMPLEMENTED = (501, "Not Iimplemented") # method not found
+    BADGATE = (502, "Bad Gateway") # Invalid response from another server
+    UNAVAILIABLE = (503, "Method Not Found") # Method found but not working
+    TIMEOUT = (504, "Timeout") # No response from another server
+    HTTPVER = (505, "Invalid HTTP version") # HTTP Version not 1.0 or 1.1
+    NETAUTH = (511, "Need authorization") # Need auth before continuing
