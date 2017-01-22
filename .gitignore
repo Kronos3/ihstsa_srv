@@ -69,3 +69,4 @@ __pycache__
 *.pem
 srv
 *.backup
+websrv.cfg
