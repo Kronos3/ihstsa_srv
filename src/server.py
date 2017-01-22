@@ -36,7 +36,7 @@ class WebSite:
             raise FileNotFoundError("No such file: '%s'" % fp)
         self.config.read (fp)
         self.servers = {}
-        for x in self.config.parse_server ():
+        for x in self.config.parse_server (os.path.realpath(fp)[0:os.path.realpath(fp).rfind('/')]):
             if x.ssl != False:
                 self.servers[x.port] = WebServerSSL ((x.ip, x.port), handler.WebHandler, x.ssl)
             else:
