@@ -27,23 +27,25 @@
 
 using namespace std;
 
-typedef struct {
+struct ssl_map {
     char* cert; // The fullchain certificate
     char* key; // The server private key
-}ssl_map;
+};
 
-class ServerConfig:
-    
-    public:
+struct ServerConfig
+{
     char* domain;
     char* log;
     char* root;
-    map <char*, char*> subdomains;
-    map <char*, ssl_map> ssl;
-    char* redirect;
-    bool forcewww;
+    char** subdomains;
+    char** subdomain_mapped;
+    ssl_map ssl;
+    int has_ssl;
+    int redirect;
+    char* redir_site;
+    int forcewww;
     char* ip;
     
-    ServerConfig (char* fname) {
-        
-    }
+};
+
+struct ServerConfig * read_config (char* fname);
