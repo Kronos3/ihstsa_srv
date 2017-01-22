@@ -83,7 +83,7 @@ class WebServer (socketserver.TCPServer):
     
     def log (self, message, _type="INFO"):
         msg = "[%s] %s\t%s\n" % (time.asctime( time.localtime(time.time()) ), _type, message)
-        print (msg)
+        print (msg[:-1])
         sys.stdout.flush()
         self.logfile.write (msg)
         self.logfile.flush()
