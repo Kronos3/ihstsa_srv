@@ -41,16 +41,18 @@ class Server:
 
 class Config(configparser.ConfigParser):
     def parse_server (self, p):
+        p += "/"
         for s_server in self.sections ():
             server = Server ()
             server.domain = self[s_server]["domain"]
             server.log = self[s_server]["log"]
             server.root = self[s_server]["root"].replace ('[$]', p)
-            exec ("server.subdomains = %s" % self[s_server]["subdomains"])
+            exec ("server.subdomains = %s" % self[s_server]["subdomains"].replace ('[$]', p))
             s_ip = s_server.split (":")
             server.ip = s_ip[0]
             server.port = int(s_ip[1])
-            exec ("server.ssl = %s" % self[s_server]["ssl"])
+            exec ("server.ssl = %s" % self[s_server]["ssl"].replace ('[$]', p))
+            print (server.ssl)
             server.redirect = self[s_server]["redirect"]
             server.forcewww = self[s_server]["forcewww"]
             yield server
